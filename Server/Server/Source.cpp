@@ -4,6 +4,21 @@
 #include <WinSock2.h>
 #include <iostream>
 
+SOCKET Connections[100];
+int ConnectionCounter = 0;
+
+void ClientHandlerThread(int index) {
+	char buffer[256];
+	while (true) {
+		recv(Connections[index], buffer, sizeof(buffer), NULL);
+		for (int i = 0; i < ConnectionCounter; i++) {
+			if (i == index)
+				continue;
+			send(Connections[i], buffer, sizeof(buffer), NULL);
+		}
+	}
+}
+
 int main() {
 
 	//WinSock Startup
@@ -25,14 +40,20 @@ int main() {
 	listen(sListen, SOMAXCONN); //Places sListen socket in a state in which is in listening for an incoming connection. Note: SOMAXCONN = Socket Outstanding Max Connections
 
 	SOCKET newConnection; // Socket to hold the client's connection
-	newConnection = accept(sListen, (SOCKADDR*)&addr, &addrlen); //Accept a new connection
-	if (newConnection == 0) { //If accepting the client's connection failed
-		std::cout << "Failed to accept the client's connection" << std::endl;
-	}
-	else { //If client connection properly accepted
-		std::cout << "Client connected!" << std::endl;
-		char MOID[256] = "Welcome! This is a Message of the Day."; //Create buffer with message of the day
-		send(newConnection, MOID, sizeof(MOID), NULL); //Send MOID buffer
+	for (int i = 0; i < 100; i++) {
+		newConnection = accept(sListen, (SOCKADDR*)&addr, &addrlen); //Accept a new connection
+		if (newConnection == 0) { //If accepting the client's connection failed
+			std::cout << "Failed to accept the client's connection" << std::endl;
+		}
+		else { //If client connection properly accepted
+			std::cout << "Client connected!" << std::endl;
+			char MOID[256] = "Welcome! This is a Message of the Day."; //Create buffer with message of the day
+			send(newConnection, MOID, sizeof(MOID), NULL); //Send MOID buffer
+			Connections[i] = newConnection;
+			ConnectionCounter += 1;
+			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandlerThread, (LPVOID)(i), NULL, NULL); //Create thread to handle this client. The index in the socket array for this thread is the value (i).
+
+		}
 	}
 	system("pause");
 	return 0;
