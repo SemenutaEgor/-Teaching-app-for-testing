@@ -3,19 +3,27 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <iostream>
+#include <string>
 
 SOCKET Connections[100];
 int ConnectionCounter = 0;
 
-void ClientHandlerThread(int index) {
-	char buffer[256];
+void ClientHandlerThread(int index) { //index = the index in the SOCKET Connections array
+	//char buffer[256]; //Buffer to recieve and send out messages from/to the clients
+	int bufferlength; //Holds the length of the buffer 
 	while (true) {
-		recv(Connections[index], buffer, sizeof(buffer), NULL);
-		for (int i = 0; i < ConnectionCounter; i++) {
-			if (i == index)
-				continue;
-			send(Connections[i], buffer, sizeof(buffer), NULL);
+		recv(Connections[index], (char*)&bufferlength, sizeof(int), NULL); //Get buffer length
+		char * buffer = new char[bufferlength]; //Buffer to hold recieved message
+		recv(Connections[index], buffer, bufferlength, NULL); //Receive message from client
+		
+		for (int i = 0; i < ConnectionCounter; i++) { //For each client connection
+			if (i == index) //Don't send the chat message to the same user who sent it 
+				continue; //Skip user
+			send(Connections[i], (char*)&bufferlength, sizeof(int), NULL); //send the buffer length to client
+			send(Connections[i], buffer, bufferlength, NULL); //send the chat message to this client
 		}
+
+		delete[] buffer;
 	}
 }
 
@@ -47,9 +55,11 @@ int main() {
 		}
 		else { //If client connection properly accepted
 			std::cout << "Client connected!" << std::endl;
-			char MOID[256] = "Welcome! This is a Message of the Day."; //Create buffer with message of the day
-			send(newConnection, MOID, sizeof(MOID), NULL); //Send MOID buffer
-			Connections[i] = newConnection;
+			std::string MOID= "Welcome! This is a Message of the Day."; //Create buffer with message of the day
+			int MOIDLength = MOID.size(); //Length of message of the day
+			send(newConnection, (char*)&MOIDLength, sizeof(int), NULL); //Send size of MOID buffer
+			send(newConnection, MOID.c_str(), MOIDLength, NULL); //Send MOID buffer
+			Connections[i] = newConnection; //Set socket in array to be the newest connection before creating the thread to handle this client's socket
 			ConnectionCounter += 1;
 			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandlerThread, (LPVOID)(i), NULL, NULL); //Create thread to handle this client. The index in the socket array for this thread is the value (i).
 

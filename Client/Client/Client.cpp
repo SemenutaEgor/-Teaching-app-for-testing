@@ -3,14 +3,20 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <iostream>
+#include <string>
 
-SOCKET Connection;
+SOCKET Connection; //This client's connection ti the server
 
 void ClientThread() {
-	char buffer[256];
+	//char buffer[256]; //Create buffer to hold messages up to 256 characters
+	int bufferlength; //Hold the length of the buffer 
 	while (true) {
-		recv(Connection, buffer, sizeof(buffer), NULL);
-		std::cout << buffer << std::endl;
+		recv(Connection, (char*)&bufferlength, sizeof(int), NULL); //receive buffer length
+		char * buffer = new char[bufferlength+1]; //Allocate buffer
+		buffer[bufferlength] = '\0'; //Set last character of buffer to be null terminator so we arent printing info we dont want
+		recv(Connection, buffer, bufferlength, NULL); //Receive message from server
+		std::cout << buffer << std::endl; //print out buffer
+		delete[] buffer; //Deallocate buffer
 	}
 }
 
@@ -41,10 +47,13 @@ int main() {
 	std::cout << "MOID:" << MOID << std::endl;*/
 	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientThread, NULL, NULL, NULL); //Create the client thread
 
-	char buffer[256];
+	//char buffer[256]; //256 char buffer to send message 
+	std::string buffer; //string bufffer to send message
 	while (true) {
-		std::cin.getline(buffer, sizeof(buffer));
-		send(Connection, buffer, sizeof(buffer), NULL);
+		std::getline(std::cin, buffer); //Get line if user preses enter and fill the buffer
+		int bufferlength = buffer.size();
+		send(Connection, (char*)&bufferlength, sizeof(int), NULL); //Send length of buffer 
+		send(Connection, buffer.c_str(), bufferlength, NULL); //Send buffer
 		Sleep(10);
 	}
 
