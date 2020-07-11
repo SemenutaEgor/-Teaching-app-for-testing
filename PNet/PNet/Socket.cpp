@@ -25,6 +25,12 @@ namespace PNet
 			int error = WSAGetLastError();
 			return PResult::P_NotYetImplemented;
 		}
+
+		if (SetSocketOption(SocketOption::TCP_NoDelay, TRUE) != PResult::P_Success)
+		{
+			return PResult::P_NotYetImplemented;
+		}
+
 		return PResult::P_Success;
 	}
 
@@ -54,5 +60,25 @@ namespace PNet
 	IPVersion Socket::GetIPVersion()
 	{
 		return ipversion;
+	}
+	PResult Socket::SetSocketOption(SocketOption option, BOOL value)
+	{
+		int result = 0;
+		switch (option)
+		{
+		case SocketOption::TCP_NoDelay:
+			result = setsockopt(handle,IPPROTO_TCP, TCP_NODELAY, (const char*)&value, sizeof(value));
+			break;
+		default:
+			return PResult::P_NotYetImplemented;
+		}
+
+		if (result != 0) //If an error occured
+		{
+			int error = WSAGetLastError();
+			return PResult::P_NotYetImplemented;
+		}
+
+		return PResult::P_Success;
 	}
 }
