@@ -64,6 +64,24 @@ namespace PNet
 		return PResult::P_Success;
 	}
 
+	PResult Socket::Listen(IPEndpoint endpoint, int backlog)
+	{
+		if (Bind(endpoint) != PResult::P_Success)
+		{
+			return PResult::P_NotYetImplemented;
+
+		}
+
+		int result = listen(handle, backlog);
+		if (result != 0) //If an error occured
+		{
+			int error = WSAGetLastError();
+			return PResult::P_NotYetImplemented;
+		}
+
+		return PResult::P_Success;
+	}
+
 	SocketHandle Socket::GetHandle()
 	{
 		return handle;
