@@ -114,6 +114,7 @@ namespace PNet
 		}
 		std::cout << "Hostname:" << hostname << std::endl;
 		std::cout << "IP: " << ip_string << std::endl;
+		std::cout << "Port: " << port << std::endl;
 		std::cout << "IP bytes..." << std::endl;
 		for (auto & digit : ip_bytes)
 		{
