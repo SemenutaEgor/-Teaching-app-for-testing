@@ -46,7 +46,7 @@ int main()
 					int result = PResult::P_Success;
 					while (result == PResult::P_Success)
 					{
-						result = newConnection.Recv(buffer, 256, bytesRecieved);
+						result = newConnection.RecvAll(buffer, 256);
 						if (result != PResult::P_Success)
 							break;
 						std::cout << buffer << std::endl;
