@@ -97,13 +97,13 @@ void Server::Frame()
 
 				int bytesReceived = 0;
 
-				if (connection.task == PacketTask::ProcessPacketSize)
+				if (connection.pm_incoming.currentTask == PacketManagerTask::ProcessPacketSize)
 				{
-					bytesReceived = recv(use_fd[i].fd, (char*)&connection.packetSize + connection.ectractionOffset, sizeof(uint16_t) - connection.ectractionOffset, 0);
+					bytesReceived = recv(use_fd[i].fd, (char*)&connection.pm_incoming.currentPacketSize + connection.pm_incoming.currentPacketExtractionOffset, sizeof(uint16_t) - connection.pm_incoming.currentPacketExtractionOffset, 0);
 				}
 				else //Process Packet Contents
 				{
-					bytesReceived = recv(use_fd[i].fd, (char*)&connection.buffer + connection.ectractionOffset, connection.packetSize - connection.ectractionOffset, 0);
+					bytesReceived = recv(use_fd[i].fd, (char*)&connection.buffer + connection.pm_incoming.currentPacketExtractionOffset, connection.pm_incoming.currentPacketSize - connection.pm_incoming.currentPacketExtractionOffset, 0);
 
 				}
 
@@ -126,38 +126,34 @@ void Server::Frame()
 
 				if (bytesReceived > 0)
 				{
-					connection.ectractionOffset += bytesReceived;
-					if (connection.task == PacketTask::ProcessPacketSize)
+					connection.pm_incoming.currentPacketExtractionOffset += bytesReceived;
+					if (connection.pm_incoming.currentTask == PacketManagerTask::ProcessPacketSize)
 					{
-						if (connection.ectractionOffset == sizeof(uint16_t))
+						if (connection.pm_incoming.currentPacketExtractionOffset == sizeof(uint16_t))
 						{
-							connection.packetSize = ntohs(connection.packetSize);
-							if (connection.packetSize > PNet::g_MaxPacketSize)
+							connection.pm_incoming.currentPacketSize = ntohs(connection.pm_incoming.currentPacketSize);
+							if (connection.pm_incoming.currentPacketSize > PNet::g_MaxPacketSize)
 							{
 								CloseConnection(connectionIndex, "Packet size too large.");
 								continue;
 							}
-							connection.ectractionOffset = 0;
-							connection.task = PacketTask::ProcessPacketContents;
+							connection.pm_incoming.currentPacketExtractionOffset = 0;
+							connection.pm_incoming.currentTask = PacketManagerTask::ProcessPacketContents;
 						}
 					}
 					else //Processing packet contents
 					{
-						if (connection.ectractionOffset == connection.packetSize)
+						if (connection.pm_incoming.currentPacketExtractionOffset == connection.pm_incoming.currentPacketSize)
 						{
-							Packet packet;
-							packet.buffer.resize(connection.packetSize);
-							memcpy(&packet.buffer[0], connection.buffer, connection.packetSize);
+							std::shared_ptr<Packet> packet = std::make_shared<Packet>();
+							packet->buffer.resize(connection.pm_incoming.currentPacketSize);
+							memcpy(&packet->buffer[0], connection.buffer, connection.pm_incoming.currentPacketSize);
 
-							if (!ProcessPacket(packet))
-							{
-								CloseConnection(connectionIndex, "Failed to process packet");
-								continue;
-							}
+							connection.pm_incoming.Append(packet);
 
-							connection.packetSize = 0;
-							connection.ectractionOffset = 0;
-							connection.task = PacketTask::ProcessPacketSize;
+							connection.pm_incoming.currentPacketSize = 0;
+							connection.pm_incoming.currentPacketExtractionOffset = 0;
+							connection.pm_incoming.currentTask = PacketManagerTask::ProcessPacketSize;
 						}
 					}
 				}
@@ -166,6 +162,20 @@ void Server::Frame()
 
 		}
 
+	}
+
+	for (int i = connections.size() - 1; i >= 0; i--)
+	{
+		while (connections[i].pm_incoming.HasPendingPackets())
+		{
+			std::shared_ptr<Packet> frontPacket = connections[i].pm_incoming.Retrieve();
+			if (!ProcessPacket(frontPacket))
+			{
+				CloseConnection(i, "Failed to process incoming packet.");
+				break;
+			}
+			connections[i].pm_incoming.Pop();
+		}
 	}
 
 	
@@ -181,32 +191,32 @@ void Server::CloseConnection(int connectionIndex, std::string reason)
 	connections.erase(connections.begin() + connectionIndex);
 }
 
-bool Server::ProcessPacket(Packet & packet)
+bool Server::ProcessPacket(std::shared_ptr<Packet> packet)
 {
-		switch (packet.GetPacketType())
+		switch (packet->GetPacketType())
 		{
 		case PacketType::PT_ChatMessage:
 		{
 			std::string chatmessage;
-			packet >> chatmessage;
+			*packet >> chatmessage;
 			std::cout << "Chat Message: " << chatmessage << std::endl;
 			break;
 		}
 		case PacketType::PT_IntegerArray:
 		{
 			uint32_t arraySize = 0;
-			packet >> arraySize;
+			*packet >> arraySize;
 			std::cout << "Array Size: " << arraySize << std::endl;
 			for (uint32_t i = 0; i < arraySize; i++)
 			{
 				uint32_t element = 0;
-				packet >> element;
+				*packet >> element;
 				std::cout << "Element[" << i << "] - " << element << std::endl;
 			}
 			break;
 		}
 		default:
-			std::cout << "Unrecognized packet type: " << packet.GetPacketType() << std::endl;
+			std::cout << "Unrecognized packet type: " << packet->GetPacketType() << std::endl;
 			return false;
 		}
 
