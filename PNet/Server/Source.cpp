@@ -3,12 +3,15 @@
 
 int main()
 {
-	MyServer server;
-	if (server.Initialize(IPEndpoint("::", 6112)))
+	if (Network::Initialize())
 	{
-		while (true)
+		MyServer server;
+		if (server.Initialize(IPEndpoint("::", 6112)))
 		{
-			server.Frame();
+			while (true)
+			{
+				server.Frame();
+			}
 		}
 	}
 	Network::Shutdown();
