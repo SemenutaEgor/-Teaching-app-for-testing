@@ -41,7 +41,7 @@ bool Server::Initialize(IPEndpoint ip)
 
 void Server::Frame()
 {
-	std::vector<WSAPOLLFD> use_fd = master_fd;
+	use_fd = master_fd;
 
 	if (WSAPoll(use_fd.data(), use_fd.size(), 1) > 0)
 	{
@@ -69,58 +69,48 @@ void Server::Frame()
 		}
 #pragma endregion Code specific to the listening socket 
 
-		for (int i = 1; i < use_fd.size(); i++)
+		for (int i = use_fd.size() - 1; i >= 1; i--)
 		{
 			int connectionIndex = i - 1;
 			TCPConnection & connection = connections[connectionIndex];
 
 			if (use_fd[i].revents & POLLERR) //If error occured on this socket
 			{
-				std::cout << "Poll error occured on: " << connection.ToString() << "." << std::endl;	
-				master_fd.erase(master_fd.begin() + i);
-				use_fd.erase(use_fd.begin() + i);
-				connection.Close();
-				connections.erase(connections.begin() + connectionIndex);
-				i -= 1;
+				CloseConnection(connectionIndex, "POLLERR");
 				continue;
 			}
 
 			if (use_fd[i].revents & POLLHUP) //If poll hangup occured on this socket
 			{
-				std::cout << "Poll hangup occured on: " << connection.ToString() << "." << std::endl;
-				master_fd.erase(master_fd.begin() + i);
-				use_fd.erase(use_fd.begin() + i);
-				connection.Close();
-				connections.erase(connections.begin() + connectionIndex);
-				i -= 1;
+				CloseConnection(connectionIndex, "POLLHUP");
 				continue;
 			}
 
 			if (use_fd[i].revents & POLLNVAL) //If invalid socket
 			{
-				std::cout << "Invalid socket on: " << connection.ToString() << "." << std::endl;
-				master_fd.erase(master_fd.begin() + i);
-				use_fd.erase(use_fd.begin() + i);
-				connection.Close();
-				connections.erase(connections.begin() + connectionIndex);
-				i -= 1;
+				CloseConnection(connectionIndex, "POLLINVAL");
 				continue;
 			}
 
 			if (use_fd[i].revents & POLLRDNORM) //If normal data can be read  without  blocking 
 			{
-				char buffer[PNet::g_MaxPacketSize];
+
 				int bytesReceived = 0;
-				bytesReceived = recv(use_fd[i].fd, buffer, PNet::g_MaxPacketSize, 0);
+
+				if (connection.task == PacketTask::ProcessPacketSize)
+				{
+					bytesReceived = recv(use_fd[i].fd, (char*)&connection.packetSize + connection.ectractionOffset, sizeof(uint16_t) - connection.ectractionOffset, 0);
+				}
+				else //Process Packet Contents
+				{
+					bytesReceived = recv(use_fd[i].fd, (char*)&connection.buffer + connection.ectractionOffset, connection.packetSize - connection.ectractionOffset, 0);
+
+				}
+
 
 				if (bytesReceived == 0) //If connection was lost
 				{
-					std::cout << "[Recv==0] Connection lost: " << connection.ToString() << "." << std::endl;
-					master_fd.erase(master_fd.begin() + i);
-					use_fd.erase(use_fd.begin() + i);
-					connection.Close();
-					connections.erase(connections.begin() + connectionIndex);
-					i -= 1;
+					CloseConnection(connectionIndex, "Recv==0");
 					continue;
 				}
 
@@ -129,19 +119,47 @@ void Server::Frame()
 					int error = WSAGetLastError();
 					if (error != WSAEWOULDBLOCK)
 					{
-						std::cout << "[Recv<0] Connection lost: " << connection.ToString() << "." << std::endl;
-						master_fd.erase(master_fd.begin() + i);
-						use_fd.erase(use_fd.begin() + i);
-						connection.Close();
-						connections.erase(connections.begin() + connectionIndex);
-						i -= 1;
+						CloseConnection(connectionIndex, "Recv<0");
 						continue;
 					}
 				}
 
 				if (bytesReceived > 0)
 				{
-					std::cout << connection.ToString() << " - Message Size: " << bytesReceived << "." << std::endl;
+					connection.ectractionOffset += bytesReceived;
+					if (connection.task == PacketTask::ProcessPacketSize)
+					{
+						if (connection.ectractionOffset == sizeof(uint16_t))
+						{
+							connection.packetSize = ntohs(connection.packetSize);
+							if (connection.packetSize > PNet::g_MaxPacketSize)
+							{
+								CloseConnection(connectionIndex, "Packet size too large.");
+								continue;
+							}
+							connection.ectractionOffset = 0;
+							connection.task = PacketTask::ProcessPacketContents;
+						}
+					}
+					else //Processing packet contents
+					{
+						if (connection.ectractionOffset == connection.packetSize)
+						{
+							Packet packet;
+							packet.buffer.resize(connection.packetSize);
+							memcpy(&packet.buffer[0], connection.buffer, connection.packetSize);
+
+							if (!ProcessPacket(packet))
+							{
+								CloseConnection(connectionIndex, "Failed to process packet");
+								continue;
+							}
+
+							connection.packetSize = 0;
+							connection.ectractionOffset = 0;
+							connection.task = PacketTask::ProcessPacketSize;
+						}
+					}
 				}
 
 			}
@@ -151,4 +169,46 @@ void Server::Frame()
 	}
 
 	
+}
+
+void Server::CloseConnection(int connectionIndex, std::string reason)
+{
+	TCPConnection & connection = connections[connectionIndex];
+	std::cout << "[" << reason << "] Connection lost: " << connection.ToString() << "." << std::endl;
+	master_fd.erase(master_fd.begin() + (connectionIndex+1));
+	use_fd.erase(use_fd.begin() + (connectionIndex + 1));
+	connection.Close();
+	connections.erase(connections.begin() + connectionIndex);
+}
+
+bool Server::ProcessPacket(Packet & packet)
+{
+		switch (packet.GetPacketType())
+		{
+		case PacketType::PT_ChatMessage:
+		{
+			std::string chatmessage;
+			packet >> chatmessage;
+			std::cout << "Chat Message: " << chatmessage << std::endl;
+			break;
+		}
+		case PacketType::PT_IntegerArray:
+		{
+			uint32_t arraySize = 0;
+			packet >> arraySize;
+			std::cout << "Array Size: " << arraySize << std::endl;
+			for (uint32_t i = 0; i < arraySize; i++)
+			{
+				uint32_t element = 0;
+				packet >> element;
+				std::cout << "Element[" << i << "] - " << element << std::endl;
+			}
+			break;
+		}
+		default:
+			std::cout << "Unrecognized packet type: " << packet.GetPacketType() << std::endl;
+			return false;
+		}
+
+		return true;
 }
