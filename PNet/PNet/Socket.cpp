@@ -113,7 +113,7 @@ namespace PNet
 		return PResult::P_Success;
 	}
 
-	PResult Socket::Accept(Socket & outSocket)
+	PResult Socket::Accept(Socket & outSocket, IPEndpoint * endpoint)
 	{
 		assert(ipversion == IPVersion::IPv4 || ipversion == IPVersion::IPv6);
 
@@ -127,9 +127,10 @@ namespace PNet
 				int error = WSAGetLastError();
 				return PResult::P_GenericError;
 			}
-			IPEndpoint	newConnectionEndpoint((sockaddr*)&addr);
-			std::cout << "New conection acepted!" << std::endl;
-			newConnectionEndpoint.Print();
+			if (endpoint != nullptr)
+			{
+				*endpoint = IPEndpoint((sockaddr*)&addr); 
+			}
 			outSocket = Socket(IPVersion::IPv4, acceptedConnectionHandle);
 		}
 		else //IPv6
@@ -141,10 +142,13 @@ namespace PNet
 			{
 				int error = WSAGetLastError();
 				return PResult::P_GenericError;
+			}			
+			
+			if (endpoint != nullptr)
+			{
+				*endpoint = IPEndpoint((sockaddr*)&addr);
 			}
-			IPEndpoint	newConnectionEndpoint((sockaddr*)&addr);
-			std::cout << "New conection acepted!" << std::endl;
-			newConnectionEndpoint.Print();
+
 			outSocket = Socket(IPVersion::IPv6, acceptedConnectionHandle);
 		}
 		

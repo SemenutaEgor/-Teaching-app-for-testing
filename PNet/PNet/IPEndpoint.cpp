@@ -1,6 +1,7 @@
 #include "IPEndpoint.h"
 #include <assert.h>
 #include <iostream>
+#include "Helpers.h"
 
 namespace PNet
 {
@@ -18,6 +19,8 @@ namespace PNet
 			{
 				ip_string = ip;
 				hostname = ip;
+				Helpers::trim(ip_string);
+				Helpers::trim(hostname);
 
 				ip_bytes.resize(sizeof(ULONG));
 				memcpy(&ip_bytes[0], &addr.S_un.S_addr, sizeof(ULONG));
@@ -41,6 +44,8 @@ namespace PNet
 			inet_ntop(AF_INET, &host_addr->sin_addr, &ip_string[0], 16);
 
 			hostname = ip;
+			Helpers::trim(ip_string);
+			Helpers::trim(hostname);
 
 			ULONG ip_long = host_addr->sin_addr.S_un.S_addr; //get ip address as unsigned long
 			ip_bytes.resize(sizeof(ULONG));
@@ -60,6 +65,8 @@ namespace PNet
 	{
 		ip_string = ip;
 		hostname = ip;
+		Helpers::trim(ip_string);
+		Helpers::trim(hostname);
 
 		ip_bytes.resize(16);
 		memcpy(&ip_bytes[0], &addr6.u, 16);
@@ -81,6 +88,8 @@ namespace PNet
 		inet_ntop(AF_INET6, &host_addr->sin6_addr, &ip_string[0], 46);
 
 		hostname = ip;
+		Helpers::trim(ip_string);
+		Helpers::trim(hostname);
 
 		ip_bytes.resize(16);
 		memcpy(&ip_bytes[0], &host_addr->sin6_addr, 16); //copy bytes into our array of bytes representing ip address
@@ -105,7 +114,6 @@ IPEndpoint::IPEndpoint(sockaddr * addr)
 		ip_string.resize(16);
 		inet_ntop(AF_INET, &addrv4->sin_addr, &ip_string[0], 16);
 		hostname = ip_string;
-
 	}
 	else //IPv6
 	{
@@ -117,8 +125,9 @@ IPEndpoint::IPEndpoint(sockaddr * addr)
 		ip_string.resize(46);
 		inet_ntop(AF_INET6, &addrv6->sin6_addr, &ip_string[0], 46);
 		hostname = ip_string;
-
 	}
+	Helpers::trim(ip_string);
+	Helpers::trim(hostname);
 
 }
 
