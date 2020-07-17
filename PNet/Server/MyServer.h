@@ -1,5 +1,6 @@
 #pragma once
 #include <PNet/IncludeMe.h>
+#include"Students.h"
 
 using namespace std;
 

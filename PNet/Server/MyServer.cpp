@@ -1,5 +1,7 @@
 #include "MyServer.h"
+#include "Students.h"
 #include <iostream>
+#include <fstream>
 
 void MyServer::OnConnect(TCPConnection & newConnection)
 {
@@ -43,7 +45,25 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 	{
 		std::string chatmessage;
 		*packet >> chatmessage;
-		std::cout << "Chat Message: " << chatmessage << std::endl;
+		std::cout << "Message: " << chatmessage << std::endl;
+		break;
+	}
+	case PacketType::PT_Student:
+	{
+		std::string name;
+		*packet >> name;
+		std::cout << "Name: " << name << std::endl;
+
+		std::string pointsString;
+		*packet >> pointsString;
+		std::cout << "Points: " << pointsString << std::endl;
+
+		std::string resultString = name + " " + pointsString;
+		std::ofstream save_result;                    
+		save_result.open("Results.txt", std::ios::app);  
+		save_result << resultString << std::endl;  
+		//save_result << \n;
+		save_result.close();
 		break;
 	}
 	case PacketType::PT_IntegerArray:
@@ -55,7 +75,7 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 		{
 			uint32_t element = 0;
 			*packet >> element;
-			std::cout << "Element[" << i << "] - " << element << std::endl;
+			std::cout << "Element - [" << i << "] - " << element << std::endl;
 		}
 		break;
 	}

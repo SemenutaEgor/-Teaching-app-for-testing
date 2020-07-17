@@ -9,6 +9,8 @@ namespace PNet
 		bool Connect(IPEndpoint ip);
 		bool IsConnected();
 		bool Frame();
+
+		TCPConnection connection;
 	protected:
 		virtual bool ProcessPacket(std::shared_ptr<Packet> packet);
 		virtual void OnConnect();
@@ -16,7 +18,7 @@ namespace PNet
 		virtual void OnDisconnect(std::string reason);
 		void CloseConnection(std::string reason);
 
-		TCPConnection connection;
+		//TCPConnection connection;
 	private:
 		bool isConnected = false;
 

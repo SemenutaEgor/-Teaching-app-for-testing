@@ -177,7 +177,7 @@ namespace PNet
 						}
 						else
 						{
-							break; //Added after tutorial was made 2019-06-24
+							break; 
 						}
 					}
 				}
