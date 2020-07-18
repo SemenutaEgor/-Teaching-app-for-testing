@@ -57,3 +57,36 @@ void PrintAccounts()
 		std::cout << "Points: " << acct.points << std::endl;
 	}
 }
+
+void RecordData()
+{
+	std::ofstream record("AccountData.txt", std::ios::app);
+	if (!record.is_open())
+		std::cout << "AccountData.txt not open\n";
+	else
+	{
+		for (auto & acct : accountsVector)
+		{
+			record << acct.username << " " << acct.password << " " << acct.points << std::endl;
+		}
+		record.close();
+	}
+}
+
+void ReadData()
+{
+	std::ifstream read("AccountData.txt", std::ios::app);
+	std::string username;
+	std::string password;
+	int points;
+	if (!read.is_open())
+		std::cout << "AccountData.txt not open\n";
+	else
+	{
+		while (read >> username >> password >> points)
+		{
+			accountsVector.push_back(Account(username, password, points));
+		}
+		read.close();
+	}
+}

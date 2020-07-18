@@ -3,7 +3,7 @@
 
 int main()
 {
-	setlocale(LC_ALL, "Russian");
+	//ReadData();
 	if (Network::Initialize())
 	{
 		PrintAccounts();
@@ -15,6 +15,7 @@ int main()
 				server.Frame();
 			}
 		}
+		//RecordData();
 	}
 	Network::Shutdown();
 	system("pause");

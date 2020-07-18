@@ -29,11 +29,14 @@ void MyServer::OnConnect(TCPConnection & newConnection)
 		connection.pm_outgoing.Append(newUserMessagePacket);
 	}*/
 	std::cout << newConnection.ToString() << " - New connection established... Awaiting for account credentials..." << std::endl;
+	ReadData();
+	PrintAccounts();
 }
 
 void MyServer::OnDisconnect(TCPConnection & lostConnection, std::string reason)
 {
 	std::cout << "[" << reason << "] Connection lost: " << lostConnection.ToString() << "." << std::endl;
+	RecordData();
 
 	std::shared_ptr<Packet> connectionLostPacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
 	*connectionLostPacket << std::string("A user disconnected!");
