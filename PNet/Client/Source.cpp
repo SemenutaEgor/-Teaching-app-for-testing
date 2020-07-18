@@ -1,49 +1,41 @@
 //Client Code
 #include "MyClient.h"
 #include <iostream>
-#include "Students.h"
 #include <thread>
 
 MyClient client;
 
-void func()
+void loading()
 {
-	// эта функция запускается когда вызывается thread.launch()
-	if (client.Connect(IPEndpoint("::1", 6112)))
+	while (client.IsConnected())
 	{
-		while (client.IsConnected())
-		{
-			client.Frame();
-		}
+		client.Frame();
 	}
 }
 
 int main()
 {
-	//Students student("student", 0);
-	//student.MixWord();
-
 	if (Network::Initialize())
 	{
-		std::thread thr(func);
-		//thr.join();
-		//MyClient client;
 		if (client.Connect(IPEndpoint("::1", 6112)))
 		{
+			std::thread thr(loading);
 			int com = -1;
+			std::string username = "";
+			std::string userpassword = "";
 			while (com != 0)
 			{
-				std::cout << "Sign in - 1, Sign up - 2, Exit - 0" << std::endl;
+				std::cout << "Sign in - 1, Sign up - 2, MixWord - 3, Exit - 0" << std::endl;
 				std::cin >> com;
 				switch (com)
 				{
 				case 1:
 				{
 					std::cout << "Enter username:" << std::endl;
-					std::string username;
+					//std::string username;
 					std::cin >> username;
 					std::cout << "Enter password:" << std::endl;
-					std::string userpassword;
+					//std::string userpassword;
 					std::cin >> userpassword;
 					client.SendAccountCredentials(username, userpassword);
 					//client.Frame();
@@ -52,43 +44,31 @@ int main()
 				case 2:
 				{
 					std::cout << "Enter username:" << std::endl;
-					std::string username;
+					//std::string username;
 					std::cin >> username;
 					std::cout << "Enter password:" << std::endl;
-					std::string userpassword;
+					//std::string userpassword;
 					std::cin >> userpassword;
 					client.SendNewAccount(username, userpassword);
 					//client.Frame();
 					break;
 				}
+				case 3:
+				{
+					int points = 0;
+					points = MixWord();
+					client.SendPoints(username, points);
+					break;
+				}
 				case 0:
 					break;
 				}
-
-				/*Students student;
-				student.NewStudent();
-				student.PrintStudents();
-				student.MixWord();
-				std::string pointsString = std::to_string(student.GetPoints());
-				client.SendStudent(student.GetName(), student.GetPassword(), pointsString);*/
 			}
+			Network::Shutdown();
+			thr.join();
 		}
+		//Network::Shutdown();
+		system("pause");
+		return 0;
 	}
-	Network::Shutdown();
-	system("pause");
-	return 0;
 }
-
-/*int main()
-{
-	int a = 0;
-	std::string str = "";
-
-	std::cout << "Enter name:" << std::endl;
-	std::cin >> str;
-	std::cout << "Enter points:" << std::endl;
-	std::cin >> a;
-
-	Students N(str, a);
-	N.PrintStudents();
-}*/

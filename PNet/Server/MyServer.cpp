@@ -1,5 +1,4 @@
 #include "MyServer.h"
-#include "Students.h"
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -59,42 +58,6 @@ bool MyServer::ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet
 		std::cout << "Message: " << chatmessage << std::endl;
 		break;
 	}
-	case PacketType::PT_Student:
-	{
-		std::string nameString;
-		*packet >> nameString;
-		//std::cout << "Name: " << nameString << std::endl;
-
-		std::ofstream save_name;
-		save_name.open("Names.txt", std::ios::app);
-		save_name << nameString << std::endl;
-		save_name.close();
-
-		std::string passwordString;
-		*packet >> passwordString;
-		//std::cout << "Password: " << passwordString << std::endl;
-
-		std::string pointsString;
-		*packet >> pointsString;
-		//std::cout << "Points: " << pointsString << std::endl;
-
-		uint32_t pointsInt = atoi(pointsString.c_str());
-		Students student(nameString, passwordString, pointsInt);
-		student.PrintStudents();
-
-		std::string resultString = nameString + " " + pointsString;
-		std::ofstream save_result;                    
-		save_result.open("Results.txt", std::ios::app);  
-		save_result << resultString << std::endl;  
-		save_result.close();
-
-		std::string studentString = nameString + " " + passwordString;
-		std::ofstream save_student;
-		save_student.open("Students.txt", std::ios::app);
-		save_student << studentString << std::endl;
-		save_student.close();
-		break;
-	}
 	case PacketType::PT_IntegerArray:
 	{
 		uint32_t arraySize = 0;
@@ -150,6 +113,31 @@ bool MyServer::ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet
 		else
 		{
 			std::cout << "This name already exists! Aborting connection!" << std::endl;
+			connections[connectionIndex].shutdownMode = true; //By setting shutdownmode to true, this connection will close once all outgoing packets are sent. No more incoming packets will be processed for this connection.
+			std::shared_ptr<Packet> badAccountDataPacket = std::make_shared<Packet>(PacketType::PT_BadAccountData);
+			connections[connectionIndex].pm_outgoing.Append(badAccountDataPacket);
+			return true;
+		}
+		break;
+	}
+	case PacketType::PT_AddPoints:
+	{
+		std::string username;
+		std::string userpointsString;
+		*packet >> username >> userpointsString;
+		int userpoints = std::stoi(userpointsString);
+		if (AddPoints(username, userpoints))
+		{
+			std::cout << "Account " << username << " get " << userpoints << " points" << std::endl;
+			std::shared_ptr<Packet> pointsPacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
+			*pointsPacket << std::string(userpointsString + "points added.");
+			connections[connectionIndex].pm_outgoing.Append(pointsPacket);
+			PrintAccounts();
+			return true;
+		}
+		else
+		{
+			std::cout << "Some error, no points added" << std::endl;
 			connections[connectionIndex].shutdownMode = true; //By setting shutdownmode to true, this connection will close once all outgoing packets are sent. No more incoming packets will be processed for this connection.
 			std::shared_ptr<Packet> badAccountDataPacket = std::make_shared<Packet>(PacketType::PT_BadAccountData);
 			connections[connectionIndex].pm_outgoing.Append(badAccountDataPacket);

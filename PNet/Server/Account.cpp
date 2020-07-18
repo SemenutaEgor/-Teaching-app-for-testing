@@ -29,16 +29,31 @@ bool CreateAccount(std::string newusername, std::string newuserpassword)
 		}
 	}
 
-	accountsVector.push_back({ newusername, newuserpassword });
+	accountsVector.push_back({ newusername, newuserpassword, 0 });
 	return true;
 
 }
 
+bool AddPoints(std::string username, int userpoints)
+{
+	for (auto & acct : accountsVector)
+	{
+		if (acct.username == username)
+		{
+			acct.points += userpoints;
+			return true;
+		}
+	}
+	return false;
+}
+
 void PrintAccounts()
 {
-	for (int i = 0; i < accountsVector.size(); i++)
+	std::cout << "Current status of accounts:" << std::endl;
+	for (auto & acct : accountsVector)
 	{
-		std::cout << "Name: " << accountsVector[i].username << std::endl;
-		std::cout << "Password: " << accountsVector[i].password << std::endl;
+		std::cout << "Name: " << acct.username << std::endl;
+		std::cout << "Password: " << acct.password << std::endl;
+		std::cout << "Points: " << acct.points << std::endl;
 	}
 }

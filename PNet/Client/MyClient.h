@@ -1,6 +1,6 @@
 #pragma once
 #include <PNet/IncludeMe.h>
-#include "Students.h"
+#include "Tasks.h"
 
 class MyClient : public Client
 {
@@ -12,8 +12,7 @@ private:
 	//void OnConnectFail() override;
 	//void OnDisconnect(std::string reason) override;
 public:
-	void SendName(std::string myString);
-	void SendStudent(std::string name, std::string passwordString, std::string pointsString);
 	void SendAccountCredentials(std::string username, std::string userpassword);
 	void SendNewAccount(std::string username, std::string userpassword);
+	void SendPoints(std::string username, int points);
 };
