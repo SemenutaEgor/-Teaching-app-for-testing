@@ -25,6 +25,9 @@ namespace PNet
 
 	void PacketManager::Pop()
 	{
-		packets.pop(); //Remove packet from front of queue
+		if (!packets.empty())
+			packets.pop(); //Remove packet from front of queue
+		else
+			return;
 	}
 }

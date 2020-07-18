@@ -13,19 +13,47 @@ int main()
 		MyClient client;
 		if (client.Connect(IPEndpoint("::1", 6112)))
 		{
-			int com = 1;
-			while (com)
+			int com = -1;
+			while (com != 0)
 			{
-				client.Frame();
-				Students student;
+				std::cout << "Sign in - 1, Sign up - 2, Exit - 0" << std::endl;
+				std::cin >> com;
+				switch (com)
+				{
+				case 1:
+				{
+					std::cout << "Enter username:" << std::endl;
+					std::string username;
+					std::cin >> username;
+					std::cout << "Enter password:" << std::endl;
+					std::string userpassword;
+					std::cin >> userpassword;
+					client.SendAccountCredentials(username, userpassword);
+					client.Frame();
+					break;
+				}
+				case 2:
+				{
+					std::cout << "Enter username:" << std::endl;
+					std::string username;
+					std::cin >> username;
+					std::cout << "Enter password:" << std::endl;
+					std::string userpassword;
+					std::cin >> userpassword;
+					client.SendNewAccount(username, userpassword);
+					client.Frame();
+					break;
+				}
+				case 0:
+					break;
+				}
+
+				/*Students student;
 				student.NewStudent();
 				student.PrintStudents();
 				student.MixWord();
 				std::string pointsString = std::to_string(student.GetPoints());
-				client.SendStudent(student.GetName(), student.GetPassword(), pointsString);
-				client.Frame();
-				std::cout << "Again - 1, Exit - 0" << std::endl;
-				std::cin >> com;
+				client.SendStudent(student.GetName(), student.GetPassword(), pointsString);*/
 			}
 		}
 	}

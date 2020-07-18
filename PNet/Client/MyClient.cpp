@@ -2,6 +2,21 @@
 #include "Students.h"
 #include <iostream>
 
+void MyClient::SendAccountCredentials(std::string username, std::string userpassword)
+{
+	std::shared_ptr<Packet> accountPacket = std::make_shared<Packet>(PacketType::PT_ClientConnect);
+	*accountPacket << username << userpassword;
+	connection.pm_outgoing.Append(accountPacket);
+}
+
+void MyClient::SendNewAccount(std::string username, std::string userpassword)
+{
+	std::shared_ptr<Packet> accountPacket = std::make_shared<Packet>(PacketType::PT_NewAccount);
+	*accountPacket << username << userpassword;
+	connection.pm_outgoing.Append(accountPacket);
+}
+
+
 bool MyClient::ProcessPacket(std::shared_ptr<Packet> packet)
 {
 	switch (packet->GetPacketType())
@@ -41,6 +56,9 @@ bool MyClient::ProcessPacket(std::shared_ptr<Packet> packet)
 		}
 		break;
 	}
+	case PacketType::PT_BadAccountData:
+		std::cout << "Bad account data. Connection refused." << std::endl;
+		return true;
 	default:
 		std::cout << "Unrecognized packet type: " << packet->GetPacketType() << std::endl;
 		return false;
@@ -53,15 +71,22 @@ void MyClient::OnConnect()
 {
 	std::cout << "Successfully connected to the server!" << std::endl;
 
+	std::cout << "Connection with server established." << std::endl;
+
 	std::shared_ptr<Packet> helloPacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
 	*helloPacket << std::string("Hello from the client!");
 	connection.pm_outgoing.Append(helloPacket);
 }
 
-void MyClient::SendName(std::string myString)
+void MyClient::OnDisconnect(std::string reason)
+{
+	std::cout << "Lost connection to server! Reason: " << reason << std::endl;
+}
+
+void MyClient::SendName(std::string nameString)
 {
 	std::shared_ptr<Packet> namePacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
-	*namePacket << myString;
+	*namePacket << nameString;
 	connection.pm_outgoing.Append(namePacket);
 }
 

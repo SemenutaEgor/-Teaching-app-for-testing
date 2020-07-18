@@ -9,6 +9,9 @@ namespace PNet
 		PT_ChatMessage,
 		PT_IntegerArray,
 		PT_Student,
-		PT_Password
+		PT_Data,
+		PT_ClientConnect, //Sent from client to server to try to connect
+		PT_BadAccountData, //Sent from server to client when bad account data has been sent
+		PT_NewAccount
 	};
 }

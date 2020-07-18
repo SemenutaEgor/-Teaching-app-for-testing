@@ -4,9 +4,17 @@
 #include <fstream>
 #include <stdlib.h>
 
+
+/*void MyServer::SendData(TCPConnection & newConnection)
+{
+	std::shared_ptr<Packet> dataPacket = std::make_shared<Packet>(PacketType::PT_Data);
+	*dataPacket << std::string("Welcome!");
+	newConnection.pm_outgoing.Append(dataPacket); 
+}*/
+
 void MyServer::OnConnect(TCPConnection & newConnection)
 {
-	std::cout << newConnection.ToString() << " - New connection accepted." << std::endl;
+	/*std::cout << newConnection.ToString() << " - New connection accepted." << std::endl;
 
 	std::shared_ptr<Packet> welcomeMessagePacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
 	*welcomeMessagePacket << std::string("Welcome!");
@@ -20,7 +28,8 @@ void MyServer::OnConnect(TCPConnection & newConnection)
 			continue;
 
 		connection.pm_outgoing.Append(newUserMessagePacket);
-	}
+	}*/
+	std::cout << newConnection.ToString() << " - New connection established... Awaiting for account credentials..." << std::endl;
 }
 
 void MyServer::OnDisconnect(TCPConnection & lostConnection, std::string reason)
@@ -38,7 +47,8 @@ void MyServer::OnDisconnect(TCPConnection & lostConnection, std::string reason)
 	}
 }
 
-bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
+//bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
+bool MyServer::ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet)
 {
 	switch (packet->GetPacketType())
 	{
@@ -54,6 +64,11 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 		std::string nameString;
 		*packet >> nameString;
 		//std::cout << "Name: " << nameString << std::endl;
+
+		std::ofstream save_name;
+		save_name.open("Names.txt", std::ios::app);
+		save_name << nameString << std::endl;
+		save_name.close();
 
 		std::string passwordString;
 		*packet >> passwordString;
@@ -71,8 +86,13 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 		std::ofstream save_result;                    
 		save_result.open("Results.txt", std::ios::app);  
 		save_result << resultString << std::endl;  
-		//save_result << \n;
 		save_result.close();
+
+		std::string studentString = nameString + " " + passwordString;
+		std::ofstream save_student;
+		save_student.open("Students.txt", std::ios::app);
+		save_student << studentString << std::endl;
+		save_student.close();
 		break;
 	}
 	case PacketType::PT_IntegerArray:
@@ -85,6 +105,46 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 			uint32_t element = 0;
 			*packet >> element;
 			std::cout << "Element - [" << i << "] - " << element << std::endl;
+		}
+		break;
+	}
+	case PacketType::PT_ClientConnect:
+	{
+		std::string username;
+		std::string userpassword;
+		*packet >> username >> userpassword;
+		std::cout << "User tried to connect with the following credentials [" << username << "] / [" << userpassword << "]" << std::endl;
+		if (IsAccountValid(username, userpassword))
+		{
+			std::cout << "Account credentials are valid!" << std::endl;
+		}
+		else
+		{
+			std::cout << "Account credentials are bad! Aborting connection!" << std::endl;
+			connections[connectionIndex].shutdownMode = true; //By setting shutdownmode to true, this connection will close once all outgoing packets are sent. No more incoming packets will be processed for this connection.
+			std::shared_ptr<Packet> badAccountDataPacket = std::make_shared<Packet>(PacketType::PT_BadAccountData);
+			connections[connectionIndex].pm_outgoing.Append(badAccountDataPacket);
+			return true;
+		}
+		break;
+	}
+	case PacketType::PT_NewAccount:
+	{
+		std::string username;
+		std::string userpassword;
+		*packet >> username >> userpassword;
+		std::cout << "User tried to connect with the following credentials [" << username << "] / [" << userpassword << "]" << std::endl;
+		if (CreateAccount(username, userpassword))
+		{
+			std::cout << "Account created!" << std::endl;
+		}
+		else
+		{
+			std::cout << "This name already exists! Aborting connection!" << std::endl;
+			connections[connectionIndex].shutdownMode = true; //By setting shutdownmode to true, this connection will close once all outgoing packets are sent. No more incoming packets will be processed for this connection.
+			std::shared_ptr<Packet> badAccountDataPacket = std::make_shared<Packet>(PacketType::PT_BadAccountData);
+			connections[connectionIndex].pm_outgoing.Append(badAccountDataPacket);
+			return true;
 		}
 		break;
 	}

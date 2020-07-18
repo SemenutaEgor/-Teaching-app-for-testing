@@ -14,7 +14,8 @@ namespace PNet
 		virtual void OnConnect(TCPConnection & newConnection);
 		virtual void OnDisconnect(TCPConnection & lostConnection, std::string reason);
 		void CloseConnection(int connectionIndex, std::string reason);
-		virtual bool ProcessPacket(std::shared_ptr<Packet> packet);
+		//virtual bool ProcessPacket(std::shared_ptr<Packet> packet);
+		virtual bool ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet);
 
 		Socket listeningSocket;
 		std::vector<TCPConnection> connections;
