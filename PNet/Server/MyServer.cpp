@@ -117,6 +117,10 @@ bool MyServer::ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet
 		if (IsAccountValid(username, userpassword))
 		{
 			std::cout << "Account credentials are valid!" << std::endl;
+			std::shared_ptr<Packet> accountPacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
+			*accountPacket << std::string("Logged in.");
+			connections[connectionIndex].pm_outgoing.Append(accountPacket);
+			return true;
 		}
 		else
 		{
@@ -133,10 +137,15 @@ bool MyServer::ProcessPacket(int connectionIndex, std::shared_ptr<Packet> packet
 		std::string username;
 		std::string userpassword;
 		*packet >> username >> userpassword;
-		std::cout << "User tried to connect with the following credentials [" << username << "] / [" << userpassword << "]" << std::endl;
+		std::cout << "User tried to create account with the following credentials [" << username << "] / [" << userpassword << "]" << std::endl;
 		if (CreateAccount(username, userpassword))
 		{
 			std::cout << "Account created!" << std::endl;
+			std::shared_ptr<Packet> createdPacket = std::make_shared<Packet>(PacketType::PT_ChatMessage);
+			*createdPacket << std::string("Account created");
+			connections[connectionIndex].pm_outgoing.Append(createdPacket);
+			PrintAccounts();
+			return true;
 		}
 		else
 		{

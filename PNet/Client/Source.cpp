@@ -2,6 +2,21 @@
 #include "MyClient.h"
 #include <iostream>
 #include "Students.h"
+#include <thread>
+
+MyClient client;
+
+void func()
+{
+	// эта функция запускается когда вызывается thread.launch()
+	if (client.Connect(IPEndpoint("::1", 6112)))
+	{
+		while (client.IsConnected())
+		{
+			client.Frame();
+		}
+	}
+}
 
 int main()
 {
@@ -10,7 +25,9 @@ int main()
 
 	if (Network::Initialize())
 	{
-		MyClient client;
+		std::thread thr(func);
+		//thr.join();
+		//MyClient client;
 		if (client.Connect(IPEndpoint("::1", 6112)))
 		{
 			int com = -1;
@@ -29,7 +46,7 @@ int main()
 					std::string userpassword;
 					std::cin >> userpassword;
 					client.SendAccountCredentials(username, userpassword);
-					client.Frame();
+					//client.Frame();
 					break;
 				}
 				case 2:
@@ -41,7 +58,7 @@ int main()
 					std::string userpassword;
 					std::cin >> userpassword;
 					client.SendNewAccount(username, userpassword);
-					client.Frame();
+					//client.Frame();
 					break;
 				}
 				case 0:

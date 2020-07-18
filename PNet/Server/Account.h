@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
+
 struct Account
 {
 	std::string username;
@@ -9,6 +11,7 @@ struct Account
 
 bool IsAccountValid(std::string username, std::string userpassword);
 bool CreateAccount(std::string username, std::string userpassword);
+void PrintAccounts();
 
 static std::vector<Account> accountsVector =
 {

@@ -6,6 +6,7 @@ int main()
 	setlocale(LC_ALL, "Russian");
 	if (Network::Initialize())
 	{
+		PrintAccounts();
 		MyServer server;
 		if (server.Initialize(IPEndpoint("::", 6112)))
 		{

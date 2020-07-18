@@ -27,11 +27,18 @@ bool CreateAccount(std::string newusername, std::string newuserpassword)
 		{
 			return false;
 		}
-		else
-		{
-			accountsVector.push_back({ newusername, newuserpassword });
-			return true;
-		}
 	}
 
+	accountsVector.push_back({ newusername, newuserpassword });
+	return true;
+
+}
+
+void PrintAccounts()
+{
+	for (int i = 0; i < accountsVector.size(); i++)
+	{
+		std::cout << "Name: " << accountsVector[i].username << std::endl;
+		std::cout << "Password: " << accountsVector[i].password << std::endl;
+	}
 }
