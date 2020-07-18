@@ -8,6 +8,7 @@ namespace PNet
 		PT_Invalid,
 		PT_ChatMessage,
 		PT_IntegerArray,
-		PT_Student
+		PT_Student,
+		PT_Password
 	};
 }

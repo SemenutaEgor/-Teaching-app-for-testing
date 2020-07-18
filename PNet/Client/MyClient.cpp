@@ -19,6 +19,10 @@ bool MyClient::ProcessPacket(std::shared_ptr<Packet> packet)
 		*packet >> name;
 		std::cout << "Name: " << name << std::endl;
 
+		std::string passwordString;
+		*packet >> passwordString;
+		std::cout << "Password: " << passwordString << std::endl;
+
 		std::string pointsString;
 		*packet >> pointsString;
 		std::cout << "Points: " << pointsString << std::endl;
@@ -61,10 +65,11 @@ void MyClient::SendName(std::string myString)
 	connection.pm_outgoing.Append(namePacket);
 }
 
-void MyClient::SendStudent(std::string name, std::string pointsString)
+void MyClient::SendStudent(std::string name, std::string passwordString, std::string pointsString)
 {
 	std::shared_ptr<Packet> pointsPacket = std::make_shared<Packet>(PacketType::PT_Student);
 	*pointsPacket << name;
+	*pointsPacket << passwordString;
 	*pointsPacket << pointsString;
 	connection.pm_outgoing.Append(pointsPacket);
 }

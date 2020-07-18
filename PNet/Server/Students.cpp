@@ -7,10 +7,24 @@
 #include <iterator>
 
 
-Students::Students(std::string newname, uint32_t newpoints)
+Students::Students(std::string newname, std::string newpassword, uint32_t newpoints)
 {
 	name = newname;
+	password = newpassword;
 	points = newpoints;
+}
+
+void Students::NewStudent()
+{
+	std::string studentName;
+	std::string studentPassword;
+	std::cout << "Enter name..." << std::endl;
+	std::cin >> studentName;
+	std::cout << "Enter password..." << std::endl;
+	std::cin >> studentPassword;
+	name = studentName;
+	password = studentPassword;
+	points = 0;
 }
 
 void Students::SetName(std::string newname)
@@ -21,6 +35,16 @@ void Students::SetName(std::string newname)
 std::string Students::GetName()
 {
 	return name;
+}
+
+void Students::SetPassword(std::string newpassword)
+{
+	password = newpassword;
+}
+
+std::string Students::GetPassword()
+{
+	return password;;
 }
 
 void Students::SetPoints(uint32_t newpoints)
@@ -35,7 +59,7 @@ int Students::GetPoints()
 
 void Students::PrintStudents()
 {
-	std::cout << "Name: " << name << " Points: " << points << std::endl;
+	std::cout << "Name: " << name << " Password:" << password << " Points: " << points << std::endl;
 }
 
 void Students::MixWord()
@@ -80,7 +104,7 @@ void Students::MixWord()
 			}
 		}
 
-		std::cout << "Task completed, you have " << points << " points" << std::endl;
+		std::cout << "You have" << points << " points" << std::endl;
 		/*copy(WordArray.begin(), WordArray.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
 		std::cout << std::endl;*/
 		/*std::getline(MixWord, word);

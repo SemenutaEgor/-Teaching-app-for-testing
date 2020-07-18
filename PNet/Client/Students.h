@@ -4,11 +4,16 @@
 class Students
 {
 public:
-	Students() { name = ""; points = 0; }
-	Students(std::string newname, uint32_t newpoints);
+	Students() { name = "Name"; password = "qwerty", points = 0; }
+	Students(std::string newname, std::string password, uint32_t newpoints);
+
+	void NewStudent();
 
 	void SetName(std::string newname);
 	std::string GetName();
+
+	void SetPassword(std::string newpassword);
+	std::string GetPassword();
 
 	void SetPoints(uint32_t newpoints);
 	int GetPoints();
@@ -18,5 +23,6 @@ public:
 	void MixWord();
 private:
 	std::string name;
+	std::string password;
 	uint32_t points;
 };

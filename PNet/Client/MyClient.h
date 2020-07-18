@@ -11,5 +11,5 @@ class MyClient : public Client
 	//void OnDisconnect(std::string reason) override;
 public:
 	void SendName(std::string myString);
-	void SendStudent(std::string name, std::string pointsString);
+	void SendStudent(std::string name, std::string passwordString, std::string pointsString);
 };

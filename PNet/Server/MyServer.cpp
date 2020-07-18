@@ -2,6 +2,7 @@
 #include "Students.h"
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>
 
 void MyServer::OnConnect(TCPConnection & newConnection)
 {
@@ -50,15 +51,23 @@ bool MyServer::ProcessPacket(std::shared_ptr<Packet> packet)
 	}
 	case PacketType::PT_Student:
 	{
-		std::string name;
-		*packet >> name;
-		std::cout << "Name: " << name << std::endl;
+		std::string nameString;
+		*packet >> nameString;
+		//std::cout << "Name: " << nameString << std::endl;
+
+		std::string passwordString;
+		*packet >> passwordString;
+		//std::cout << "Password: " << passwordString << std::endl;
 
 		std::string pointsString;
 		*packet >> pointsString;
-		std::cout << "Points: " << pointsString << std::endl;
+		//std::cout << "Points: " << pointsString << std::endl;
 
-		std::string resultString = name + " " + pointsString;
+		uint32_t pointsInt = atoi(pointsString.c_str());
+		Students student(nameString, passwordString, pointsInt);
+		student.PrintStudents();
+
+		std::string resultString = nameString + " " + pointsString;
 		std::ofstream save_result;                    
 		save_result.open("Results.txt", std::ios::app);  
 		save_result << resultString << std::endl;  
