@@ -58,6 +58,44 @@ void PrintAccounts()
 	}
 }
 
+std::string CaesarCoder(std::string originalPassword)
+{
+	for (int i = 0; i < originalPassword.length(); i++) {
+		if (originalPassword[i] == '9')
+			originalPassword[i] = '0';
+		else
+
+			if (originalPassword[i] == 'Z') 
+				originalPassword[i] = 'A';
+			else
+
+				if (originalPassword[i] == 'z')
+					originalPassword[i] = 'a';
+				else 
+					originalPassword[i]++;
+	}
+	return originalPassword;
+}
+
+std::string CaesarDecoder(std::string encryptedPassword)
+{
+	for (int i = 0; i < encryptedPassword.length(); i++) {
+		if (encryptedPassword[i] == '0')
+			encryptedPassword[i] = '9';
+		else
+
+			if (encryptedPassword[i] == 'A')
+				encryptedPassword[i] = 'Z';
+			else
+
+				if (encryptedPassword[i] == 'a')
+					encryptedPassword[i] = 'z';
+				else
+					encryptedPassword[i]--;
+	}
+	return encryptedPassword;
+}
+
 void RecordData()
 {
 	std::ofstream record("AccountData.txt", std::ios::app);
@@ -67,7 +105,8 @@ void RecordData()
 	{
 		for (auto & acct : accountsVector)
 		{
-			record << acct.username << " " << acct.password << " " << acct.points << std::endl;
+			std::string encryptedPassword = CaesarCoder(acct.password);
+			record << acct.username << " " << encryptedPassword << " " << acct.points << std::endl;
 		}
 		record.close();
 	}
@@ -78,13 +117,15 @@ void ReadData()
 	std::ifstream read("AccountData.txt", std::ios::app);
 	std::string username;
 	std::string password;
+	std::string encryptedPassword;
 	int points;
 	if (!read.is_open())
 		std::cout << "AccountData.txt not open\n";
 	else
 	{
-		while (read >> username >> password >> points)
+		while (read >> username >> encryptedPassword >> points)
 		{
+			password = CaesarDecoder(encryptedPassword);
 			accountsVector.push_back(Account(username, password, points));
 		}
 		read.close();

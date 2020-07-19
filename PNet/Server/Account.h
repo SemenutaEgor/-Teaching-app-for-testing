@@ -22,6 +22,9 @@ bool CreateAccount(std::string username, std::string userpassword);
 bool AddPoints(std::string username, int userpoints);
 void PrintAccounts();
 
+std::string CaesarCoder(std::string originalPassword);
+std::string CaesarDecoder(std::string encryptedPassword);
+
 static std::vector<Account> accountsVector = {};
 /* 
 {

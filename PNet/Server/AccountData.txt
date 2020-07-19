@@ -1,9 +1,8 @@
-user1 123 0
-user2 321 0
-user3 12345 0
-user4 54321 0
-user1 123 0
-user2 321 0
-user3 12345 0
-user4 54321 0
-newuser qwerty 1
+user1 aBcD 0
+user2 120xYz 0
+user3 012345 0
+
+user1 aBcD 0
+user2 120xYz 0
+user3 012345 0
+newuser bcd234 1
