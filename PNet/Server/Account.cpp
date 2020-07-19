@@ -98,11 +98,14 @@ std::string CaesarDecoder(std::string encryptedPassword)
 
 void RecordData()
 {
-	std::ofstream record("AccountData.txt", std::ios::app);
+	std::ofstream record("AccountData.txt", std::ios::out | std::ios::trunc);
 	if (!record.is_open())
-		std::cout << "AccountData.txt not open\n";
+		std::cout << "AccountData not open\n";
 	else
 	{
+		time_t seconds = time(NULL);
+		tm* timeinfo = localtime(&seconds);
+		record << asctime(timeinfo);
 		for (auto & acct : accountsVector)
 		{
 			std::string encryptedPassword = CaesarCoder(acct.password);
@@ -118,11 +121,18 @@ void ReadData()
 	std::string username;
 	std::string password;
 	std::string encryptedPassword;
+	std::string dayOfWeek;
+	std::string month;
+	std::string day;
+	std::string time;
+	std::string year;
 	int points;
 	if (!read.is_open())
 		std::cout << "AccountData.txt not open\n";
 	else
 	{
+		read >> dayOfWeek >> month >> day >> time >> year;
+		std::cout << "Last record: " << dayOfWeek << " " << month << " " << day << " " << time << " " << year << " " << std::endl;
 		while (read >> username >> encryptedPassword >> points)
 		{
 			password = CaesarDecoder(encryptedPassword);
@@ -131,3 +141,4 @@ void ReadData()
 		read.close();
 	}
 }
+
