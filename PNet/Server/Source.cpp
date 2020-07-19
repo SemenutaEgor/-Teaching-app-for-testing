@@ -6,7 +6,6 @@ int main()
 	//ReadData();
 	if (Network::Initialize())
 	{
-		PrintAccounts();
 		MyServer server;
 		if (server.Initialize(IPEndpoint("::", 6112)))
 		{

@@ -42,7 +42,7 @@ int main()
 			std::string userpassword = "";
 			while (com != 0)
 			{
-				std::cout << "\nSign in - 1, Sign up - 2, MixWord - 3, Exit - 0" << std::endl;
+				std::cout << "\nSign in - 1, Sign up - 2, MixWord - 3, Arithmetic - 4, Exit - 0" << std::endl;
 				std::cin >> com;
 				switch (com)
 				{
@@ -74,8 +74,17 @@ int main()
 				}
 				case 3:
 				{
+					std::cout << "Reconstruct the mixed word." << std::endl;
 					int points = 0;
 					points = MixWord();
+					client.SendPoints(username, points);
+					break;
+				}
+				case 4:
+				{
+					std::cout << "Ñalculated the expression." << std::endl;
+					int points = 0;
+					points = Arithmetic();
 					client.SendPoints(username, points);
 					break;
 				}
